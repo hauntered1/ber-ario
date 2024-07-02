@@ -448,3 +448,254 @@ SELECT idespecialidade COUNT(*) AS 'tantas consultas'
 FROM consultas
 JOIN JOIN medico ON consulta.idmedico = medico.idmedico
 GROUP BY idespecialidade;
+
+/*View como criar - Estruturas CREATE, DROP ALTER*/
+create VIEW vw_RelatorioConsulta
+AS 
+SELECT consulta.dataehora, nomerecepcionista, nomepaciente, nomemedico, nomeespecialidade, cel
+FROM consulta
+INNER JOIN recepcionista ON consulta.idrecepcionista = recepcionista.idrecepcionista
+INNER JOIN paciente ON consulta.idpaciente = paciente.idpaciente
+INNER JOIN medico ON consulta.idmedico = medico.idmedico
+INNER JOIN especialidade ON medico.idespecialidade = especialidade.idespecialidade
+ORDER BY consulta.dataehora DESC;
+
+/*executar view*/
+SELECT dataehora, nomepaciente from vw_relatorioconsulta
+ORDER BY nomepaciente DESC
+/*==================AULA DIA 1====================*/
+/*STORED PROCEDURES*/
+/*VIEW MUDA DADOS. STORED PROCEDURES PODE MUDAR OU NÃO
+DROP, CREATE, ALTER*/
+CREATE PROCEDURE pi_Recepcionista
+(IN nomerecepcionista VARCHAR(50),
+cpfrecepcionista CHAR(11),
+loginrecepcionista VARCHAR(20),
+senharecepcionista CHAR(6),
+celular CHAR(11)
+) 
+INSERT INTO recepcionista (nomerecepcionista, cpfrecepcionista, loginrecepcionista, senharecepcionista, celular)
+VALUES (nomerecepcionista, cpfrecepcionista, loginrecepcionista, senharecepcionista, celular);
+
+/*chamar a stored procedure*/
+CALL pi_Recepcionista
+('Yuri','12309845623','yrbz.senaclin','castie123','47557853459')
+
+SELECT * FROM paciente
+DELETE FROM recepcionista WHERE nomerecepcionista= 'Yuri'
+
+DROP PROCEDURE pd_drecepcionista
+
+CREATE PROCEDURE pd_recepcionista
+(IN param_idrecepcionista INT)
+DELETE FROM recepcionista 
+WHERE idrecepcionista = param_idrecepcionista; 
+CALL pd_recepcionista(15)
+/*======================================*/
+
+DROP PROCEDURE ps_pacientescidade
+
+/*CREATE PROCEDURE ps_pacientescidade
+(
+IN cidade VARCHAR(20), 
+IN nomepaciente VARCHAR(50)
+)
+SELECT * FROM paciente
+WHERE cidade = cidade AND nome = nomepaciente;*/
+
+SELECT * FROM paciente
+/*======================================*/
+CREATE PROCEDURE ps_pacientescidade
+(
+IN jcidade VARCHAR(20) 
+)
+SELECT nomepaciente, cidade FROM paciente
+WHERE cidade = jcidade;
+
+CALL ps_pacientescidade ('Santos')
+/*======================================*/
+ DROP PROCEDURE ps_IdmedicoDataHOraConsulta
+CREATE PROCEDURE ps_IdmedicoDataHOraConsulta
+(
+IN para_idmedico INT
+)
+SELECT idmedico, dataehora FROM consulta
+WHERE idmedico=para_idmedico
+ORDER BY dataehora ASC;
+ 
+CALL ps_IdmedicoDataHOraConsulta(1)
+/*======================================*/
+
+SELECT * FROM consulta
+/*ERRADO*/
+CREATE PROCEDURE ps_contarconsulta 
+(
+IN para_idconsulta INT
+)
+SELECT COUNT(*) AS total_consultas
+FROM consultas
+WHERE idconsulta = para_idconsulta;
+
+
+
+/*CERTO*/
+CREATE PROCEDURE ps_contarconsultasl()
+SELECT COUNT(*) AS total_consultas
+FROM idconsultas;
+
+CALL ps_contarconsultasl()
+
+/*saidera*/
+CREATE PROCEDURE ps_nomepacienteconsulta
+(
+IN nnomepaciente, nomemedico, dataehora FROM paciente
+)
+inner JOIN paciente ON consulta.idpaciente = paciente.idpaciente
+inner JOIN medico ON consulta.idmedico = medico.idmedico
+WHERE nomepaciente = nnomepaciente;
+
+select * FROM paciente
+
+ /*1) Criar uma view que traga nome e contatos (telefones e pacientes) em ordem alfabética 
+e executá-la.
+*/
+CREATE VIEW vw_contatopaciente
+AS
+SELECT nomepaciente, cel FROM paciente
+ORDER BY nomepaciente ASC 
+
+SELECT * from vw_contatopaciente
+
+/*2) Criar uma view que traga a quantidade de consultas agrupadas por especialidade e 
+executá-la*/
+CREATE VIEW vw_consultaporespecialidade 
+AS 
+SELECT 
+especialidade.nomeespecialidade,
+COUNT(consulta.idconsulta) AS total_consultas FROM consulta
+INNER JOIN medico ON consulta.idmedico = medico.idmedico
+INNER JOIN especialidade ON medico.idespecialidade = especialidade.idespecialidade
+GROUP BY especialidade.nomeespecialidade;
+
+SELECT * FROM  vw_consultaporespecialidade 
+
+/*3) Criar uma procedure que permita saber quantos médicos possuímos por especialidade. 
+A procedure deverá exibir a quantidade de médico de acordo com o nome da 
+especialidade informada. Executar a procedure.*/
+
+CREATE PROCEDURE ps_medicoespecialidade 
+(
+IN especialidade_nome VARCHAR(30)
+)
+SELECT especialidade.nomeespecialidade AS 'especialidade',
+COUNT(idmedico) AS 'quantidade medicos' FROM medico
+JOIN especialidade ON medico.especialidade = idespecialidade
+WHERE nomeespecialidade = especialidade_nome
+GROUP BY nomeespecialidade;
+
+CALL ps_medicoespecialidade()
+
+/*4) Criar uma procedure para resetar todas as senhas dos médicos para DOCTOR e 
+executá-la*/
+
+CREATE PROCEDURE ps_alterartodassenha 
+UPDATE medico
+SET senha = 'DOCTOR'
+
+
+
+/*5) Criar uma procedure para alterar as informações de paciente*/
+
+CREATE PROCEDURE pi_mudandotudo
+(
+IN nomepaciente VARCHAR(50),
+cpf CHAR(11),
+cel CHAR (11),
+email VARCHAR(30), 
+Logradouro VARCHAR(30),
+numero VARCHAR (6),
+complemento VARCHAR (10),
+cidade VARCHAR (20),
+cep CHAR (8),
+observacoes VARCHAR(200)
+)
+INSERT INTO paciente
+(nomepaciente, cpf, cel, email, Logradouro, numero, complemento, cidade, cep, observacoes)
+VALUES (nomepaciente, cpf, cel, email, Logradouro, numero, complemento, cidade, cep, observacoes); 
+
+/*6) Criar uma procedure para inserir uma consulta na clínica.*/
+CREATE PROCEDURE pi_addconsulta
+(
+IN
+idconsulta INT,
+idmedico INT,
+idpaciente INT,
+idrecepcionista INT,
+dataehora DATETIME,
+sintomas VARCHAR(200),
+prescricao VARCHAR(200)
+)
+INSERT INTO consulta
+(idconsulta,idmedico,idpaciente,idrecepcionista ,dataehora,sintomas,prescricao)
+VALUES(idconsulta,idmedico,idpaciente,idrecepcionista ,dataehora,sintomas,prescricao);
+
+CALL pi_addconsulta()
+/*7) Criar uma procedure para excluir um exame do sistema. (Obs - Sabemos que na prática 
+deveremos utilizar a exclusão lógica).*/
+CREATE PROCEDURE pd_deleex
+(
+IN a_idexame INT
+)
+DELETE FROM exame
+WHERE idexame = a_idexame;
+
+CALL pd_deleex(3)
+/*8) Criar uma procedure que liste a data da consulta e o nome do paciente de acordo com 
+o nome do médico. Aqui, listaremos a agenda do médico. Execute a procedure.*/
+CREATE PROCEDURE ps_Tudomedico
+(
+IN anomemedico VARCHAR(50)
+)
+SELECT consulta.dataehora, nomepaciente AS 'nome do paciento' FROM consulta 
+JOIN medico ON consulta.idmedico = medico.idmedico
+JOIN paciente ON consulta.idpaciente = paciente.idpaciente
+WHERE nomemedico = anomemedico
+ORDER BY consulta.dataehora;
+
+/*9) Criar um mecanismo para trazer a quantidade de médicos que a clínica possui por 
+especialidade. Execute o mecanismo.*/
+CREATE PROCEDURE ps_quantidademedico()
+SELECT 
+especialidade.nomeespecialidade AS especialidade, 
+COUNT(*) AS quantidade_de_medicos FROM medico
+JOIN especialidade ON medico.idespecialidade = especialidade.idespecialidade
+GROUP BY especialidade.nomeespecialidade;
+
+/*10) Criar uma procedure que liste a data da consulta, o celular do paciente e a 
+especialidade da consulta de acordo com o nome do paciente informado, mas em 
+ordem cronológica. Neste caso estaremos verificando todas as consultas do paciente.*/
+
+CREATE PROCEDURE ps_listona
+(
+IN a_nomepaciente VARCHAR(50)
+)
+SELECT consulta.dataehora, paciente.cel AS celular, especialidade.nomeespecialidade AS especialidade FROM consulta
+JOIN medico ON consulta.idmedico = medico.idmedico
+JOIN paciente ON consulta.idpaciente = paciente.idpaciente
+JOIN especialidade ON medico.idespecialidade = especialidade.idespecialidade
+WHERE paciente.nomepaciente = a_nomepaciente
+ORDER BY consulta.dataehora;
+
+/*DESAFIO: Criar uma procedure que sirva para atualizar a data de uma consulta. A procedure 
+deve receber ID da consulta e a data e hora para a qual queremos trocar*/
+
+CREATE PROCEDURE pu_alterarDataConsulta
+(
+IN a_idConsulta INT,
+IN a_atualiza DATETIME
+)
+UPDATE consulta
+SET dataehora = a_atualiza
+WHERE idConsulta = a_idConsulta;
+
+
